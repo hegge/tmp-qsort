@@ -37,6 +37,18 @@ template<int T, class U> struct sum<tlist<T,U> >
 	enum { value = T + sum<U>::value };
 };
 
+template<class tlist1, class tlist2> struct concat;
+template<class tlist2> struct concat<null_type, tlist2>
+{
+	typedef tlist2 result;
+};
+template<int T, class U, class tlist2> struct concat<tlist<T,U>, tlist2>
+{
+private:
+	typedef typename concat<U, tlist2>::result tail;
+public:
+	typedef tlist<T, tail> result;
+};
 
 int main(int argc, char const* argv[])
 {
@@ -52,6 +64,9 @@ int main(int argc, char const* argv[])
 
 	std::cout << "sum 1: " << sum<numlist>::value << std::endl;
 	std::cout << "sum 2: " << sum<numlist2>::value << std::endl;
+
+	typedef concat<numlist, numlist2>::result combined;
+	std::cout << "sum combined: " << sum<combined>::value << std::endl;
 	
 	return 0;
 }
