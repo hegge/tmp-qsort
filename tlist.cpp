@@ -94,8 +94,8 @@ template<> struct quicksort<null_type>
 template<int T, class U> struct quicksort<tlist<T,U> >
 {
 private:
-	typedef typename quicksort<typename filter_less<U, T>::result >::result left;
-	typedef typename quicksort<typename filter_ge<U, T>::result >::result right;
+	typedef typename quicksort<typename filter_less<U, T>::result >::result right;
+	typedef typename quicksort<typename filter_ge<U, T>::result >::result left;
 public:
 	typedef typename concat<left, tlist<T, right> >::result result;
 };
