@@ -50,13 +50,62 @@ public:
 	typedef tlist<T, tail> result;
 };
 
+template<bool B, class T, class U> struct take;
+template<class T, class U> struct take<true, T, U>
+{
+	typedef T result;
+};
+template<class T, class U> struct take<false, T, U>
+{
+	typedef U result;
+};
+
+template<class tlist, int F> struct filter_less;
+template<int F> struct filter_less<null_type, F>
+{
+	typedef null_type result;
+};
+template<int T, class U, int F> struct filter_less<tlist<T,U>, F>
+{
+private:
+	typedef typename filter_less<U, F>::result tail;
+public:
+	typedef typename take<(F < T), tlist<T, tail>, tail>::result result;
+};
+
+template<class tlist, int F> struct filter_ge;
+template<int F> struct filter_ge<null_type, F>
+{
+	typedef null_type result;
+};
+template<int T, class U, int F> struct filter_ge<tlist<T,U>, F>
+{
+private:
+	typedef typename filter_ge<U, F>::result tail;
+public:
+	typedef typename take<(F >= T), tlist<T, tail>, tail>::result result;
+};
+
+template<class tlist> struct quicksort;
+template<> struct quicksort<null_type>
+{
+	typedef null_type result;
+};
+template<int T, class U> struct quicksort<tlist<T,U> >
+{
+private:
+	typedef typename quicksort<typename filter_less<U, T>::result >::result left;
+	typedef typename quicksort<typename filter_ge<U, T>::result >::result right;
+public:
+	typedef typename concat<left, tlist<T, right> >::result result;
+};
+
 int main(int argc, char const* argv[])
 {
 	assert(argc==1);
 	assert(argv[0]);
 
 	typedef tlist<1, tlist<5, tlist<2, null_type> > > numlist;
-
 	typedef tlist<7, numlist> numlist2;
 
 	std::cout << "length 1: " << length<numlist>::value << std::endl;
@@ -64,6 +113,8 @@ int main(int argc, char const* argv[])
 
 	std::cout << "sum 1: " << sum<numlist>::value << std::endl;
 	std::cout << "sum 2: " << sum<numlist2>::value << std::endl;
+
+	std::cout << "filtered sum 1: " << sum<filter_less<numlist2, 4>::result>::value << std::endl;
 
 	typedef concat<numlist, numlist2>::result combined;
 	std::cout << "sum combined: " << sum<combined>::value << std::endl;
