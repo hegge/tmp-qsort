@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cassert>
 #include <string>
+#include <sstream>
 
 template<int T, class U>
 struct tlist
@@ -100,6 +101,23 @@ public:
 	typedef typename concat<left, tlist<T, right> >::result result;
 };
 
+template<class tlist> struct format;
+template<> struct format<null_type>
+{
+	std::string operator()(){
+		return "";
+	}
+};
+template<int T, class U> struct format<tlist<T,U> >
+{
+	std::string operator()(){
+		std::stringstream ss;
+		format<U> print;
+		ss << T << " " << print();
+		return ss.str();
+	}
+};
+
 int main(int argc, char const* argv[])
 {
 	assert(argc==1);
@@ -118,6 +136,12 @@ int main(int argc, char const* argv[])
 
 	typedef concat<numlist, numlist2>::result combined;
 	std::cout << "sum combined: " << sum<combined>::value << std::endl;
+
+	format<combined> print;
+	std::cout << print() << std::endl;
+
+	format<quicksort<combined>::result> print_sorted;
+	std::cout << print_sorted() << std::endl;
 	
 	return 0;
 }
