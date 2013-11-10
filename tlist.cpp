@@ -61,30 +61,49 @@ template<class T, class U> struct take<false, T, U>
 	typedef U result;
 };
 
-template<class tlist, int F> struct filter_less;
-template<int F> struct filter_less<null_type, F>
-{
-	typedef null_type result;
-};
-template<int T, class U, int F> struct filter_less<tlist<T,U>, F>
-{
-private:
-	typedef typename filter_less<U, F>::result tail;
-public:
-	typedef typename take<(F < T), tlist<T, tail>, tail>::result result;
+template<int n> struct
+Int {
+    static const int value = n;
 };
 
-template<class tlist, int F> struct filter_ge;
-template<int F> struct filter_ge<null_type, F>
+template<int lhs, int rhs>
+struct is_less
+{
+	enum { value = lhs < rhs };
+};
+
+template<int lhs, int rhs>
+struct is_ge
+{
+	enum { value = lhs >= rhs };
+};
+
+template<
+	template<int, int> class pred,
+	int limit,
+	class tlist >
+struct filter;
+
+template<
+	template<int, int> class  pred,
+	int limit >
+struct filter<pred, limit, null_type>
 {
 	typedef null_type result;
 };
-template<int T, class U, int F> struct filter_ge<tlist<T,U>, F>
+
+template<
+	template<int, int> class pred,
+	int limit,
+	int head,
+	class tail >
+struct filter<pred, limit, tlist<head,tail>>
 {
 private:
-	typedef typename filter_ge<U, F>::result tail;
+	typedef typename filter<pred, limit, tail>::result comp_tail;
+	static const bool should_take = pred<head, limit>::value;
 public:
-	typedef typename take<(F >= T), tlist<T, tail>, tail>::result result;
+	typedef typename take<should_take, tlist<head, comp_tail>, comp_tail>::result result;
 };
 
 template<class tlist> struct quicksort;
@@ -92,13 +111,14 @@ template<> struct quicksort<null_type>
 {
 	typedef null_type result;
 };
-template<int T, class U> struct quicksort<tlist<T,U> >
+template<int head, class tail>
+struct quicksort< tlist<head, tail> >
 {
 private:
-	typedef typename quicksort<typename filter_less<U, T>::result >::result right;
-	typedef typename quicksort<typename filter_ge<U, T>::result >::result left;
+	typedef typename quicksort<typename filter<is_less, head, tail>::result >::result left;
+	typedef typename quicksort<typename filter<is_ge, head, tail>::result >::result right;
 public:
-	typedef typename concat<left, tlist<T, right> >::result result;
+	typedef typename concat<left, tlist<head, right> >::result result;
 };
 
 template<class tlist> struct format;
@@ -129,7 +149,7 @@ int main()
 	std::cout << "sum 1: " << sum<numlist>::value << std::endl;
 	std::cout << "sum 2: " << sum<numlist2>::value << std::endl;
 
-	std::cout << "filtered sum 1: " << sum<filter_less<numlist2, 4>::result>::value << std::endl;
+	std::cout << "filtered sum 1: " << sum<filter<is_less, 2, numlist2>::result>::value << std::endl;
 
 	typedef concat<numlist, numlist2>::result combined;
 	std::cout << "sum combined: " << sum<combined>::value << std::endl;
