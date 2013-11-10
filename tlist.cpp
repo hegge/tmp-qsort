@@ -118,11 +118,8 @@ template<int T, class U> struct format<tlist<T,U> >
 	}
 };
 
-int main(int argc, char const* argv[])
+int main()
 {
-	assert(argc==1);
-	assert(argv[0]);
-
 	typedef tlist<1, tlist<5, tlist<2, null_type> > > numlist;
 	typedef tlist<7, numlist> numlist2;
 
