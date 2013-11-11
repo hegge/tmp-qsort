@@ -51,14 +51,14 @@ public:
 	typedef tlist<T, tail> result;
 };
 
-template<bool B, class T, class U> struct take;
-template<class T, class U> struct take<true, T, U>
+template<bool B, int head, class tail> struct take;
+template<int head, class tail> struct take<true, head, tail>
 {
-	typedef T result;
+	typedef tlist<head, tail> result;
 };
-template<class T, class U> struct take<false, T, U>
+template<int head, class tail> struct take<false, head, tail>
 {
-	typedef U result;
+	typedef tail result;
 };
 
 template<int n> struct
@@ -103,7 +103,7 @@ private:
 	typedef typename filter<pred, limit, tail>::result comp_tail;
 	static const bool should_take = pred<head, limit>::value;
 public:
-	typedef typename take<should_take, tlist<head, comp_tail>, comp_tail>::result result;
+	typedef typename take<should_take, head, comp_tail>::result result;
 };
 
 template<class tlist> struct quicksort;
