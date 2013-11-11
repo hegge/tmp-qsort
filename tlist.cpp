@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 
+// Template list of ints (cons).
 template<int T, class U>
 struct tlist
 {
@@ -18,6 +19,7 @@ struct null_type
 {};
 
 
+// Basic pattern matching.
 template<class tlist> struct length;
 template<> struct length<null_type>
 {
@@ -38,6 +40,7 @@ template<int T, class U> struct sum<tlist<T,U> >
 	enum { value = T + sum<U>::value };
 };
 
+// Concatenation of two tlists.
 template<class tlist1, class tlist2> struct concat;
 template<class tlist2> struct concat<null_type, tlist2>
 {
@@ -51,6 +54,7 @@ public:
 	typedef tlist<T, tail> result;
 };
 
+// Build a new list tlist<head, tail> or keep tail.
 template<bool B, int head, class tail> struct take;
 template<int head, class tail> struct take<true, head, tail>
 {
@@ -61,11 +65,7 @@ template<int head, class tail> struct take<false, head, tail>
 	typedef tail result;
 };
 
-template<int n> struct
-Int {
-    static const int value = n;
-};
-
+// Binary predicates.
 template<int lhs, int rhs>
 struct is_less
 {
@@ -78,6 +78,7 @@ struct is_ge
 	enum { value = lhs >= rhs };
 };
 
+// Filter using binary predicates.
 template<
 	template<int, int> class pred,
 	int limit,
@@ -106,6 +107,7 @@ public:
 	typedef typename take<should_take, head, comp_tail>::result result;
 };
 
+// Quicksort.
 template<class tlist> struct quicksort;
 template<> struct quicksort<null_type>
 {
@@ -121,6 +123,7 @@ public:
 	typedef typename concat<left, tlist<head, right> >::result result;
 };
 
+// Pretty printing.
 template<class tlist> struct format;
 template<> struct format<null_type>
 {
@@ -138,6 +141,7 @@ template<int T, class U> struct format<tlist<T,U> >
 	}
 };
 
+// Simpler building of lists.
 template<int...> struct
 build_list;
 
@@ -167,13 +171,13 @@ int main()
 	typedef concat<numlist, numlist2>::result combined;
 	std::cout << "sum combined: " << sum<combined>::value << std::endl;
 
-	std::cout << format<combined>()() << std::endl;
-	std::cout << format<quicksort<combined>::result>()() << std::endl;
+	std::cout << "list: " << format<combined>()() << std::endl;
+	std::cout << "sorted: " << format<quicksort<combined>::result>()() << std::endl;
 
 	typedef build_list<1, 3, 5, 2, 1>::result simple_list;
 
-	std::cout << format<simple_list>()() << std::endl;
-	std::cout << format<quicksort<simple_list>::result>()() << std::endl;
+	std::cout << "list: " << format<simple_list>()() << std::endl;
+	std::cout << "sorted: " << format<quicksort<simple_list>::result>()() << std::endl;
 	
 	return 0;
 }
