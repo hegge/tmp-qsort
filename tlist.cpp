@@ -138,6 +138,19 @@ template<int T, class U> struct format<tlist<T,U> >
 	}
 };
 
+template<int...> struct
+build_list;
+
+template<> struct
+build_list<> {
+	typedef null_type result;
+};
+
+template<int i, int... tail> struct
+build_list<i, tail...> {
+	typedef tlist<i, typename build_list<tail...>::result > result;
+};
+
 int main()
 {
 	typedef tlist<1, tlist<5, tlist<2, null_type> > > numlist;
@@ -154,11 +167,13 @@ int main()
 	typedef concat<numlist, numlist2>::result combined;
 	std::cout << "sum combined: " << sum<combined>::value << std::endl;
 
-	format<combined> print;
-	std::cout << print() << std::endl;
+	std::cout << format<combined>()() << std::endl;
+	std::cout << format<quicksort<combined>::result>()() << std::endl;
 
-	format<quicksort<combined>::result> print_sorted;
-	std::cout << print_sorted() << std::endl;
+	typedef build_list<1, 3, 5, 2, 1>::result simple_list;
+
+	std::cout << format<simple_list>()() << std::endl;
+	std::cout << format<quicksort<simple_list>::result>()() << std::endl;
 	
 	return 0;
 }
