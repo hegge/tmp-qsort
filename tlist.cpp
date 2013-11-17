@@ -123,6 +123,87 @@ public:
 	typedef typename concat<left, tlist<head, right> >::result result;
 };
 
+// Alternative implementation of filter and quicksort using nested, templated
+// structs to emulate partial application of predicates.
+//
+// The quicksort bit doesn't compile with gcc 4.7, and might not be valid
+// C++11.
+template<int rhs>
+struct is_less1
+{
+	template<int lhs>
+	struct lambda {
+		enum { value = lhs < rhs };
+	};
+};
+
+template<int rhs>
+struct is_ge1
+{
+	template<int lhs>
+	struct lambda {
+		enum { value = lhs >= rhs };
+	};
+};
+
+template<int input>
+struct not_null
+{
+	enum { value = 1 };
+};
+template<>
+struct not_null<0>
+{
+	enum { value = 0 };
+};
+
+// Filter using unary predicates.
+template<
+	template<int> class pred,
+	class tlist >
+struct filter1;
+
+template<
+	template<int> class pred >
+struct filter1<pred, null_type>
+{
+	typedef null_type result;
+};
+
+template<
+	template<int> class pred,
+	int head,
+	class tail >
+struct filter1<pred, tlist<head,tail>>
+{
+private:
+	typedef typename filter1<pred, tail>::result comp_tail;
+	static const bool should_take = pred<head>::value;
+public:
+	typedef typename take<should_take, head, comp_tail>::result result;
+};
+
+#if 0
+template<class tlist> struct quicksort1;
+template<> struct quicksort1<null_type>
+{
+	typedef null_type result;
+};
+template<int head, class tail>
+struct quicksort1< tlist<head, tail> >
+{
+private:
+	typedef typename is_less1<head>::lambda pred_left;
+	typedef typename is_ge1<head>::lambda pred_right;
+	typedef typename filter1<pred_left, tail>::result partition_left;
+	typedef typename filter1<pred_right, tail>::result partition_rigth;
+	typedef typename quicksort1<partition_left>::result left;
+	typedef typename quicksort1<partition_right>::result right;
+public:
+	typedef typename concat<left, tlist<head, right> >::result result;
+};
+#endif
+
 // Pretty printing.
 template<class tlist> struct format;
 template<> struct format<null_type>
@@ -174,10 +255,20 @@ int main()
 	std::cout << "list: " << format<combined>()() << std::endl;
 	std::cout << "sorted: " << format<quicksort<combined>::result>()() << std::endl;
 
-	typedef build_list<1, 3, 5, 2, 1>::result simple_list;
+	typedef build_list<1, 3, 0, 5, 2, 1>::result simple_list;
 
 	std::cout << "list: " << format<simple_list>()() << std::endl;
 	std::cout << "sorted: " << format<quicksort<simple_list>::result>()() << std::endl;
+
+	// Unary version
+	std::cout << "cmp: " << is_ge1<3>::lambda<4>::value << " " <<
+				is_ge1<5>::lambda<4>::value << std::endl;
+
+	std::cout << "filtered sum 1: " << sum<filter1<is_less1<2>::lambda, numlist2>::result>::value << std::endl;
+	std::cout << "filtered: " << format<filter1<not_null, simple_list>::result>()() << std::endl;
+#if 0
+	std::cout << "sorted: " << format<quicksort1<simple_list>::result>()() << std::endl;
+#endif
 	
 	return 0;
 }
